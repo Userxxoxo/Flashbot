@@ -135,10 +135,18 @@ export class ArbitrageScanner {
         dexService.get0xQuote(chainId, pair.addressA, pair.addressB, amount)
       ]);
 
-      if (!oneInchQuote || !zeroXQuote) return;
+      if (!oneInchQuote || !zeroXQuote) {
+        console.warn(`Could not get quotes for ${pair.symbolA}/${pair.symbolB} on ${network}. Skipping.`);
+        return;
+      }
 
       const price1inch = parseFloat(oneInchQuote.price);
       const price0x = parseFloat(zeroXQuote.price);
+
+      if (isNaN(price1inch) || isNaN(price0x)) {
+        console.warn(`Invalid price received for ${pair.symbolA}/${pair.symbolB} on ${network}. Skipping.`);
+        return;
+      }
 
       // Calculate potential arbitrage
       if (Math.abs(price1inch - price0x) > 0) {
@@ -154,7 +162,7 @@ export class ArbitrageScanner {
             price1inch,
             price0x,
             profitPercent,
-            parseInt(oneInchQuote.estimatedGas)
+            parseInt(oneInchQuote.estimatedGas) || 0 // Default to 0 if undefined
           );
 
           await this.saveOpportunity(opportunity);
@@ -167,26 +175,32 @@ export class ArbitrageScanner {
             console.log(`🤖 Auto-executing arbitrage for ${pair.symbolA}-${pair.symbolB}`);
             try {
               const flashLoanAmount = ethers.parseEther(opportunity.minCapital.toString()).toString();
-              const txHash = await blockchainService.executeArbitrageTransaction(
-                network,
-                pair.addressA,
-                pair.addressB,
-                flashLoanAmount,
-                opportunity.dexA,
-                opportunity.dexB,
-                ethers.parseEther("0.01").toString() // Minimum 0.01 ETH profit
-              );
-              console.log(`✅ Auto-execution successful: ${txHash}`);
+              // Ensure the profit threshold for execution is met
+              const minProfitForExecution = parseFloat(settings.minProfitThreshold);
+              if (opportunity.profitPercent >= minProfitForExecution) {
+                const txHash = await blockchainService.executeArbitrageTransaction(
+                  network,
+                  pair.addressA,
+                  pair.addressB,
+                  flashLoanAmount,
+                  opportunity.dexA,
+                  opportunity.dexB,
+                  ethers.parseEther("0.01").toString() // Minimum 0.01 ETH profit
+                );
+                console.log(`✅ Auto-execution successful: ${txHash}`);
 
-              // Save successful trade
-              await storage.createTrade({
-                opportunityId: opportunity.id || '', // Ensure opportunity has an ID if stored
-                txHash,
-                status: 'completed',
-                actualProfit: opportunity.profitAmount.toString(),
-                gasUsed: opportunity.gasEstimate.toString(),
-                executedAt: new Date()
-              });
+                // Save successful trade
+                await storage.createTrade({
+                  opportunityId: opportunity.id || '', // Ensure opportunity has an ID if stored
+                  txHash,
+                  status: 'completed',
+                  actualProfit: opportunity.profitAmount.toString(),
+                  gasUsed: opportunity.gasEstimate.toString(),
+                  executedAt: new Date()
+                });
+              } else {
+                console.log(`Skipping auto-execution: Profit ${opportunity.profitPercent.toFixed(2)}% is below threshold ${minProfitForExecution}%`);
+              }
             } catch (error) {
               console.error(`❌ Auto-execution failed:`, error);
             }
@@ -194,7 +208,12 @@ export class ArbitrageScanner {
         }
       }
     } catch (error) {
-      console.error(`Error finding arbitrage for ${pair.symbolA}/${pair.symbolB} on ${network}:`, error);
+      // Log specific errors for DEX calls if possible
+      if ((error as any).response && (error as any).response.data) {
+        console.error(`Error finding arbitrage for ${pair.symbolA}/${pair.symbolB} on ${network}:`, (error as any).response.data);
+      } else {
+        console.error(`Error finding arbitrage for ${pair.symbolA}/${pair.symbolB} on ${network}:`, error);
+      }
     }
   }
 
