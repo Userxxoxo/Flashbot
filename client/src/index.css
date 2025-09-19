@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(215, 15%, 8%);
+  --foreground: hsl(213, 31%, 91%);
+  --card: hsl(217, 19%, 12%);
+  --card-foreground: hsl(213, 31%, 91%);
+  --popover: hsl(217, 19%, 12%);
+  --popover-foreground: hsl(213, 31%, 91%);
+  --primary: hsl(142, 86%, 28%);
+  --primary-foreground: hsl(355, 7%, 97%);
+  --secondary: hsl(215, 25%, 17%);
+  --secondary-foreground: hsl(213, 31%, 91%);
+  --muted: hsl(215, 20%, 17%);
+  --muted-foreground: hsl(217, 10%, 64%);
+  --accent: hsl(37, 91%, 55%);
+  --accent-foreground: hsl(215, 15%, 8%);
+  --destructive: hsl(0, 63%, 31%);
+  --destructive-foreground: hsl(355, 7%, 97%);
+  --border: hsl(215, 20%, 20%);
+  --input: hsl(215, 20%, 20%);
+  --ring: hsl(142, 86%, 28%);
+  --chart-1: hsl(203.8863, 88.2845%, 53.1373%);
+  --chart-2: hsl(159.7826, 100%, 36.0784%);
+  --chart-3: hsl(42.0290, 92.8251%, 56.2745%);
+  --chart-4: hsl(147.1429, 78.5047%, 41.9608%);
+  --chart-5: hsl(341.4894, 75.2000%, 50.9804%);
+  --sidebar: hsl(217, 19%, 12%);
+  --sidebar-foreground: hsl(213, 31%, 91%);
+  --sidebar-primary: hsl(142, 86%, 28%);
+  --sidebar-primary-foreground: hsl(355, 7%, 97%);
+  --sidebar-accent: hsl(215, 25%, 17%);
+  --sidebar-accent-foreground: hsl(213, 31%, 91%);
+  --sidebar-border: hsl(215, 20%, 20%);
+  --sidebar-ring: hsl(142, 86%, 28%);
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: JetBrains Mono, Consolas, monospace;
+  --radius: 0.75rem;
+  --shadow-2xs: 0px 2px 0px 0px hsl(142, 86%, 28% / 0.00);
+  --shadow-xs: 0px 2px 0px 0px hsl(142, 86%, 28% / 0.00);
+  --shadow-sm: 0px 2px 0px 0px hsl(142, 86%, 28% / 0.00), 0px 1px 2px -1px hsl(142, 86%, 28% / 0.00);
+  --shadow: 0px 2px 0px 0px hsl(142, 86%, 28% / 0.00), 0px 1px 2px -1px hsl(142, 86%, 28% / 0.00);
+  --shadow-md: 0px 2px 0px 0px hsl(142, 86%, 28% / 0.00), 0px 2px 4px -1px hsl(142, 86%, 28% / 0.00);
+  --shadow-lg: 0px 2px 0px 0px hsl(142, 86%, 28% / 0.00), 0px 4px 6px -1px hsl(142, 86%, 28% / 0.00);
+  --shadow-xl: 0px 2px 0px 0px hsl(142, 86%, 28% / 0.00), 0px 8px 10px -1px hsl(142, 86%, 28% / 0.00);
+  --shadow-2xl: 0px 2px 0px 0px hsl(142, 86%, 28% / 0.00);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+}
+
+.dark {
+  --background: hsl(215, 15%, 8%);
+  --foreground: hsl(213, 31%, 91%);
+  --card: hsl(217, 19%, 12%);
+  --card-foreground: hsl(213, 31%, 91%);
+  --popover: hsl(217, 19%, 12%);
+  --popover-foreground: hsl(213, 31%, 91%);
+  --primary: hsl(142, 86%, 28%);
+  --primary-foreground: hsl(355, 7%, 97%);
+  --secondary: hsl(215, 25%, 17%);
+  --secondary-foreground: hsl(213, 31%, 91%);
+  --muted: hsl(215, 20%, 17%);
+  --muted-foreground: hsl(217, 10%, 64%);
+  --accent: hsl(37, 91%, 55%);
+  --accent-foreground: hsl(215, 15%, 8%);
+  --destructive: hsl(0, 63%, 31%);
+  --destructive-foreground: hsl(355, 7%, 97%);
+  --border: hsl(215, 20%, 20%);
+  --input: hsl(215, 20%, 20%);
+  --ring: hsl(142, 86%, 28%);
+  --chart-1: hsl(203.8863, 88.2845%, 53.1373%);
+  --chart-2: hsl(159.7826, 100%, 36.0784%);
+  --chart-3: hsl(42.0290, 92.8251%, 56.2745%);
+  --chart-4: hsl(147.1429, 78.5047%, 41.9608%);
+  --chart-5: hsl(341.4894, 75.2000%, 50.9804%);
+  --sidebar: hsl(217, 19%, 12%);
+  --sidebar-foreground: hsl(213, 31%, 91%);
+  --sidebar-primary: hsl(142, 86%, 28%);
+  --sidebar-primary-foreground: hsl(355, 7%, 97%);
+  --sidebar-accent: hsl(215, 25%, 17%);
+  --sidebar-accent-foreground: hsl(213, 31%, 91%);
+  --sidebar-border: hsl(215, 20%, 20%);
+  --sidebar-ring: hsl(142, 86%, 28%);
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: JetBrains Mono, Consolas, monospace;
+  --radius: 0.75rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+  
+  html, body {
+    font-family: var(--font-sans);
+  }
+}
+
+@layer utilities {
+  .profit { 
+    color: hsl(142, 86%, 68%); 
+  }
+  
+  .loss { 
+    color: hsl(0, 84%, 68%); 
+  }
+  
+  .neutral { 
+    color: hsl(217, 10%, 64%); 
+  }
+  
+  .blink {
+    animation: blink 1s infinite;
+  }
+  
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.5; }
+  }
+  
+  .pulse-green {
+    animation: pulse-green 2s infinite;
+  }
+  
+  @keyframes pulse-green {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+  }
+}
