@@ -24,6 +24,8 @@ export default function QuickSettings() {
   }, [settings]);
 
   const handleSave = () => {
+    console.log('🎯 Saving settings:', localSettings);
+    console.log('📋 Current settings from server:', settings);
     updateSettings(localSettings);
     toast({
       title: "Settings Updated",

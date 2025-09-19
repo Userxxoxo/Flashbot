@@ -145,13 +145,12 @@ export class MemStorage implements IStorage {
     const updated: TradingSettings = {
       id: existing?.id || randomUUID(),
       userId,
-      minProfitThreshold: "1.5",
-      maxGasPrice: "50",
-      autoExecute: false,
-      enabledNetworks: ['ethereum', 'base'],
-      maxTradeAmount: "10000",
+      minProfitThreshold: existing?.minProfitThreshold || "1.5",
+      maxGasPrice: existing?.maxGasPrice || "50",
+      autoExecute: existing?.autoExecute || false,
+      enabledNetworks: existing?.enabledNetworks || ['ethereum', 'base'],
+      maxTradeAmount: existing?.maxTradeAmount || "10000",
       updatedAt: new Date(),
-      ...existing,
       ...settings,
     };
     this.settings.set(userId, updated);

@@ -160,7 +160,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/settings/:userId', async (req, res) => {
     try {
       const { userId } = req.params;
+      console.log('🔍 GET /api/settings:', userId);
       const settings = await storage.getTradingSettings(userId);
+      console.log('📊 Retrieved settings:', settings);
       
       if (!settings) {
         // Create default settings
@@ -185,12 +187,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/settings/:userId', async (req, res) => {
     try {
       const { userId } = req.params;
+      console.log('📝 POST /api/settings:', userId, 'Body:', req.body);
       const validatedData = settingsSchema.parse(req.body);
+      console.log('✅ Validated data:', validatedData);
       
       const updatedSettings = await storage.updateTradingSettings(userId, {
         userId,
         ...validatedData,
       });
+      console.log('💾 Updated settings result:', updatedSettings);
       
       res.json(updatedSettings);
     } catch (error) {
