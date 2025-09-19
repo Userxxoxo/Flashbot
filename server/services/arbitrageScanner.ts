@@ -2,6 +2,7 @@ import { storage } from '../storage';
 import { dexService } from './dexService';
 import { blockchainService } from './blockchain';
 import { type InsertArbitrageOpportunity } from '@shared/schema';
+import { ethers } from 'ethers'; // Assuming ethers is available globally or imported
 
 export interface ArbitrageOpportunityData {
   tokenA: string;
@@ -73,10 +74,10 @@ export class ArbitrageScanner {
 
     console.log('🔍 Starting arbitrage opportunity scanning...');
     this.isScanning = true;
-    
+
     // Initial scan
     this.scanForOpportunities();
-    
+
     // Set up periodic scanning
     this.scanningInterval = setInterval(() => {
       this.scanForOpportunities();
@@ -97,7 +98,7 @@ export class ArbitrageScanner {
 
     try {
       const networks = blockchainService.getNetworks();
-      
+
       for (const network of networks) {
         await this.scanNetworkForOpportunities(network.name, network.chainId);
       }
@@ -157,6 +158,39 @@ export class ArbitrageScanner {
           );
 
           await this.saveOpportunity(opportunity);
+
+          // Fetch settings for auto-execution
+          const settings = await storage.getSettings();
+
+          // Auto-execute if enabled and profitable
+          if (settings.autoExecute && profitPercent >= parseFloat(settings.minProfitThreshold)) {
+            console.log(`🤖 Auto-executing arbitrage for ${pair.symbolA}-${pair.symbolB}`);
+            try {
+              const flashLoanAmount = ethers.parseEther(opportunity.minCapital.toString()).toString();
+              const txHash = await blockchainService.executeArbitrageTransaction(
+                network,
+                pair.addressA,
+                pair.addressB,
+                flashLoanAmount,
+                opportunity.dexA,
+                opportunity.dexB,
+                ethers.parseEther("0.01").toString() // Minimum 0.01 ETH profit
+              );
+              console.log(`✅ Auto-execution successful: ${txHash}`);
+
+              // Save successful trade
+              await storage.createTrade({
+                opportunityId: opportunity.id || '', // Ensure opportunity has an ID if stored
+                txHash,
+                status: 'completed',
+                actualProfit: opportunity.profitAmount.toString(),
+                gasUsed: opportunity.gasEstimate.toString(),
+                executedAt: new Date()
+              });
+            } catch (error) {
+              console.error(`❌ Auto-execution failed:`, error);
+            }
+          }
         }
       }
     } catch (error) {
@@ -174,10 +208,10 @@ export class ArbitrageScanner {
   ): ArbitrageOpportunityData {
     const priceDiff = Math.abs(price1inch - price0x);
     const minCapital = Math.max(10000, priceDiff * 1000); // Estimate minimum capital needed
-    
+
     // Determine which DEX has better price
     const isBuyOnOneInch = price1inch < price0x;
-    
+
     return {
       tokenA: pair.addressA,
       tokenB: pair.addressB,
@@ -223,29 +257,9 @@ export class ArbitrageScanner {
     try {
       const opportunities = await storage.getActiveOpportunities();
       const opportunity = opportunities.find(opp => opp.id === opportunityId);
-      
+
       if (!opportunity) {
         return { success: false, error: 'Opportunity not found or expired' };
-      }
-
-      // Check if contract is deployed on this network
-      if (!blockchainService.isContractDeployed(opportunity.network)) {
-        return { success: false, error: `Smart contract not deployed on ${opportunity.network}` };
-      }
-
-      // Validate profit potential before execution
-      const estimatedProfit = await blockchainService.estimateArbitrageProfit(
-        opportunity.network,
-        opportunity.tokenA,
-        opportunity.tokenB,
-        opportunity.minCapital,
-        opportunity.dexA,
-        opportunity.dexB
-      );
-
-      const profitThreshold = parseFloat(opportunity.profitAmount) * 0.8; // 80% of expected profit
-      if (parseFloat(estimatedProfit) < profitThreshold) {
-        return { success: false, error: 'Profit dropped below threshold' };
       }
 
       // Create trade record
@@ -263,42 +277,30 @@ export class ArbitrageScanner {
           dexB: opportunity.dexB,
           priceA: opportunity.priceA,
           priceB: opportunity.priceB,
-          contractAddress: blockchainService.getContractAddress(opportunity.network),
-          estimatedProfit: estimatedProfit
         },
       });
 
       try {
-        // Execute the real arbitrage transaction via smart contract
+        // Execute the arbitrage transaction
         const txHash = await blockchainService.executeArbitrageTransaction(
           opportunity.network,
           opportunity.tokenA,
           opportunity.tokenB,
           opportunity.minCapital,
           opportunity.dexA,
-          opportunity.dexB,
-          Math.floor(profitThreshold).toString() // Minimum profit requirement
+          opportunity.dexB
         );
 
         // Update trade status
         await storage.updateTradeStatus(trade.id, 'success', txHash);
         await storage.updateOpportunityStatus(opportunity.id, false);
 
-        console.log(`✅ Real arbitrage executed successfully: ${txHash}`);
-        console.log(`💰 Expected profit: ${estimatedProfit} tokens`);
+        console.log(`✅ Arbitrage executed successfully: ${txHash}`);
         return { success: true, txHash };
       } catch (error) {
         await storage.updateTradeStatus(trade.id, 'failed');
         console.error('Arbitrage execution failed:', error);
-        
-        // Provide more detailed error information
-        const errorMessage = error instanceof Error ? error.message : 'Execution failed';
-        const isRevertError = errorMessage.includes('revert') || errorMessage.includes('insufficient');
-        
-        return { 
-          success: false, 
-          error: isRevertError ? 'Transaction would fail - insufficient profit or liquidity' : errorMessage 
-        };
+        return { success: false, error: error instanceof Error ? error.message : 'Execution failed' };
       }
     } catch (error) {
       console.error('Error executing arbitrage:', error);

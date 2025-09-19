@@ -8,7 +8,7 @@ async function main() {
     console.log("Deploying contracts with account:", deployer.address);
     console.log("Account balance:", (await deployer.getBalance()).toString());
 
-    // Balancer Vault address on Ethereum Mainnet
+    // Balancer Vault address on Base
     const BALANCER_VAULT = "0xBA12222222228d8Ba445958a75a0704d566BF2C8";
     
     // Deploy FlashArbitrage contract
@@ -27,7 +27,7 @@ async function main() {
 
     // Save deployment info
     const deploymentInfo = {
-        network: "mainnet",
+        network: "base",
         contractAddress: flashArbitrage.address,
         deployerAddress: deployer.address,
         balancerVault: BALANCER_VAULT,
@@ -36,11 +36,11 @@ async function main() {
     };
 
     writeFileSync(
-        "deployments/mainnet.json",
+        "deployments/base.json",
         JSON.stringify(deploymentInfo, null, 2)
     );
 
-    console.log("Deployment info saved to deployments/mainnet.json");
+    console.log("Deployment info saved to deployments/base.json");
 }
 
 main()
