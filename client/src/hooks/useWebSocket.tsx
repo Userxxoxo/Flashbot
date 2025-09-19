@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { type ArbitrageOpportunity, type Trade } from '@shared/schema';
 
+// Placeholder for smart contract deployment on Base network
+// In a real scenario, this would involve calling a deployment script or service.
+const deployContractOnBase = async () => {
+  console.log("Deploying smart contract on Base network...");
+  // Replace with actual deployment logic
+  // Example: await someDeploymentTool.deploy({ network: 'base' });
+  console.log("Smart contract deployment initiated on Base network.");
+};
+
+
 export interface WebSocketData {
   opportunities: ArbitrageOpportunity[];
   recentTrades: Trade[];
@@ -18,6 +28,7 @@ export interface WebSocketData {
     gasPrice: string;
     lastUpdate: Date;
   }>;
+  walletAddress?: string;
 }
 
 export function useWebSocket() {
@@ -26,19 +37,23 @@ export function useWebSocket() {
     recentTrades: [],
     stats: { totalProfit: 0, totalTrades: 0, successRate: 0, dailyProfit: 0 },
     networks: [],
+    walletAddress: undefined
   });
-  
+
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
+    // Trigger contract deployment on Base network
+    deployContractOnBase();
+
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws`;
-    
+
     const connectWebSocket = () => {
       try {
         wsRef.current = new WebSocket(wsUrl);
-        
+
         wsRef.current.onopen = () => {
           console.log('✅ WebSocket connected');
           setIsConnected(true);
@@ -47,7 +62,7 @@ export function useWebSocket() {
         wsRef.current.onmessage = (event) => {
           try {
             const message = JSON.parse(event.data);
-            
+
             switch (message.type) {
               case 'initial':
                 setData(message.data);
@@ -65,6 +80,9 @@ export function useWebSocket() {
                 // Handle trade execution notification
                 console.log('Trade executed:', message.data);
                 break;
+              case 'wallet': // New case to handle wallet address updates
+                setData(prev => ({ ...prev, walletAddress: message.data.walletAddress }));
+                break;
               default:
                 console.log('Unknown message type:', message.type);
             }
@@ -76,7 +94,7 @@ export function useWebSocket() {
         wsRef.current.onclose = () => {
           console.log('❌ WebSocket disconnected');
           setIsConnected(false);
-          
+
           // Attempt to reconnect after 3 seconds
           setTimeout(connectWebSocket, 3000);
         };

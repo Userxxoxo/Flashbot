@@ -60,6 +60,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       broadcastUpdate('opportunities', opportunities);
       broadcastUpdate('stats', stats);
       broadcastUpdate('networks', networkStatuses);
+      broadcastUpdate('wallet', { walletAddress: blockchainService.getWalletAddress() });
     } catch (error) {
       console.error('Error broadcasting updates:', error);
     }
@@ -79,6 +80,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recentTrades: trades,
         stats,
         networks: networkStatuses,
+        walletAddress: blockchainService.getWalletAddress(),
       };
 
       if (ws.readyState === WebSocket.OPEN) {

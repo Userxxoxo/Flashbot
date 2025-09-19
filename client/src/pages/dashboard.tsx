@@ -39,8 +39,15 @@ export default function Dashboard() {
             {/* User Account */}
             <div className="flex items-center space-x-3">
               <div className="text-right">
-                <div className="text-sm font-medium" data-testid="user-address">0x1234...5678</div>
-                <div className="text-xs text-muted-foreground">Connected</div>
+                <div className="text-sm font-medium font-mono" data-testid="user-address">
+                  {data.walletAddress ? 
+                    `${data.walletAddress.slice(0, 6)}...${data.walletAddress.slice(-4)}` : 
+                    'Not Connected'
+                  }
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {data.walletAddress ? 'Connected' : 'No Wallet'}
+                </div>
               </div>
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                 <i className="fas fa-user text-primary-foreground text-sm"></i>
