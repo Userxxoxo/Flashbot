@@ -4,6 +4,7 @@ import ArbitrageOpportunities from '@/components/ArbitrageOpportunities';
 import RecentTrades from '@/components/RecentTrades';
 import QuickSettings from '@/components/QuickSettings';
 import PerformanceAnalytics from '@/components/PerformanceAnalytics';
+import { WalletInfo } from "@/components/WalletInfo";
 
 export default function Dashboard() {
   const { data, isConnected } = useWebSocket();
@@ -23,7 +24,7 @@ export default function Dashboard() {
               <span>{isConnected ? 'Live Scanning' : 'Disconnected'}</span>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-6">
             {/* Network Status */}
             <div className="flex items-center space-x-4">
@@ -34,7 +35,7 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
-            
+
             {/* User Account */}
             <div className="flex items-center space-x-3">
               <div className="text-right">
@@ -63,6 +64,7 @@ export default function Dashboard() {
           {/* Trading Activity & Settings */}
           <div className="space-y-6">
             <RecentTrades trades={data.recentTrades} />
+            <WalletInfo />
             <QuickSettings />
           </div>
         </div>

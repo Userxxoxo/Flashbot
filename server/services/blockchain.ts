@@ -314,6 +314,10 @@ export class BlockchainService {
     const networkConfig = this.networks.find(n => n.name === network);
     return networkConfig?.contractAddress;
   }
+
+  getWalletAddress(): string | undefined {
+    return this.wallet?.address;
+  }
 }
 
 export const blockchainService = new BlockchainService();

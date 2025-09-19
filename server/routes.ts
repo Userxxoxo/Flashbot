@@ -131,6 +131,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/wallet', async (req, res) => {
+    try {
+      const networks = blockchainService.getNetworks();
+      const walletInfo = [];
+
+      for (const network of networks) {
+        const balance = await blockchainService.getWalletBalance(network.name);
+        const contractAddress = blockchainService.getContractAddress(network.name);
+        const isDeployed = blockchainService.isContractDeployed(network.name);
+
+        walletInfo.push({
+          network: network.name,
+          chainId: network.chainId,
+          nativeCurrency: network.nativeCurrency,
+          balance,
+          contractAddress,
+          isDeployed
+        });
+      }
+
+      res.json({
+        walletAddress: blockchainService.getWalletAddress(),
+        networks: walletInfo
+      });
+    } catch (error) {
+      console.error('Error fetching wallet info:', error);
+      res.status(500).json({ error: 'Failed to fetch wallet info' });
+    }
+  });
+
   app.post('/api/execute-arbitrage/:id', async (req, res) => {
     try {
       const { id } = req.params;
