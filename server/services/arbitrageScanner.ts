@@ -228,6 +228,26 @@ export class ArbitrageScanner {
         return { success: false, error: 'Opportunity not found or expired' };
       }
 
+      // Check if contract is deployed on this network
+      if (!blockchainService.isContractDeployed(opportunity.network)) {
+        return { success: false, error: `Smart contract not deployed on ${opportunity.network}` };
+      }
+
+      // Validate profit potential before execution
+      const estimatedProfit = await blockchainService.estimateArbitrageProfit(
+        opportunity.network,
+        opportunity.tokenA,
+        opportunity.tokenB,
+        opportunity.minCapital,
+        opportunity.dexA,
+        opportunity.dexB
+      );
+
+      const profitThreshold = parseFloat(opportunity.profitAmount) * 0.8; // 80% of expected profit
+      if (parseFloat(estimatedProfit) < profitThreshold) {
+        return { success: false, error: 'Profit dropped below threshold' };
+      }
+
       // Create trade record
       const trade = await storage.createTrade({
         opportunityId: opportunity.id,
@@ -243,30 +263,42 @@ export class ArbitrageScanner {
           dexB: opportunity.dexB,
           priceA: opportunity.priceA,
           priceB: opportunity.priceB,
+          contractAddress: blockchainService.getContractAddress(opportunity.network),
+          estimatedProfit: estimatedProfit
         },
       });
 
       try {
-        // Execute the arbitrage transaction
+        // Execute the real arbitrage transaction via smart contract
         const txHash = await blockchainService.executeArbitrageTransaction(
           opportunity.network,
           opportunity.tokenA,
           opportunity.tokenB,
           opportunity.minCapital,
           opportunity.dexA,
-          opportunity.dexB
+          opportunity.dexB,
+          Math.floor(profitThreshold).toString() // Minimum profit requirement
         );
 
         // Update trade status
         await storage.updateTradeStatus(trade.id, 'success', txHash);
         await storage.updateOpportunityStatus(opportunity.id, false);
 
-        console.log(`✅ Arbitrage executed successfully: ${txHash}`);
+        console.log(`✅ Real arbitrage executed successfully: ${txHash}`);
+        console.log(`💰 Expected profit: ${estimatedProfit} tokens`);
         return { success: true, txHash };
       } catch (error) {
         await storage.updateTradeStatus(trade.id, 'failed');
         console.error('Arbitrage execution failed:', error);
-        return { success: false, error: error instanceof Error ? error.message : 'Execution failed' };
+        
+        // Provide more detailed error information
+        const errorMessage = error instanceof Error ? error.message : 'Execution failed';
+        const isRevertError = errorMessage.includes('revert') || errorMessage.includes('insufficient');
+        
+        return { 
+          success: false, 
+          error: isRevertError ? 'Transaction would fail - insufficient profit or liquidity' : errorMessage 
+        };
       }
     } catch (error) {
       console.error('Error executing arbitrage:', error);

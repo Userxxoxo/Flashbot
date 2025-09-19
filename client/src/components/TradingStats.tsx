@@ -52,17 +52,17 @@ export default function TradingStats({ stats }: TradingStatsProps) {
         </div>
       </div>
 
-      {/* Gas Savings */}
-      <div className="bg-card rounded-lg border border-border p-6" data-testid="stat-gas-savings">
+      {/* Contract Status */}
+      <div className="bg-card rounded-lg border border-border p-6" data-testid="stat-contract-status">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Gas Savings</p>
-            <p className="text-2xl font-bold text-foreground">$128.45</p>
+            <p className="text-sm text-muted-foreground">Smart Contracts</p>
+            <p className="text-2xl font-bold text-primary">LIVE</p>
           </div>
-          <i className="fas fa-gas-pump text-foreground text-xl"></i>
+          <i className="fas fa-shield-alt text-primary text-xl"></i>
         </div>
         <div className="mt-2 text-xs text-muted-foreground">
-          Flash loans efficiency
+          Real flash loan execution
         </div>
       </div>
     </div>
